@@ -3,6 +3,7 @@
 
 void setup() {
   // put your setup code here, to run once:
+  //Vamo caralho birl
 }
 
 void loop() {
