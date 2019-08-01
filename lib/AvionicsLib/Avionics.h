@@ -20,8 +20,16 @@ class Avionics
     void updateAltitudes();
     void filterAltitudes();
     void finiteDifferences();
-    void detectApogge();
+    void detectApogge();    
+};
 
+class DataFlight
+{
+  public:
+    DataFlight();
+
+    float prevState();
+    float actState();
 };
 
 
