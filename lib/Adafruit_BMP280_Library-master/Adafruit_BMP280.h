@@ -155,8 +155,8 @@ public:
     /** 4000 ms standby. */
     STANDBY_MS_4000 = 0x07
   };
-
-  Adafruit_BMP280(TwoWire *theWire = &Wire2);
+  ////////////////////////////////////////////////////////////////////////
+  Adafruit_BMP280(TwoWire *theWire = &Wire2); //(TwoWire *theWire = &Wire)
   Adafruit_BMP280(int8_t cspin, SPIClass *theSPI = &SPI);
   Adafruit_BMP280(int8_t cspin, int8_t mosipin, int8_t misopin, int8_t sckpin);
 

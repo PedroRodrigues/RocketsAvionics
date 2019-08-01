@@ -1,15 +1,19 @@
-#ifndef Avionics_H
-#define Avionics_H
+#ifndef Avionics_h
+#define Avionics_h
 
 class Avionics
 {
   public:
+    Avionics();
 
     void init();
     void update();
 
-    char getBMP280();
+    void initBMP180();
     char getBMP180();
+    void initBMP280();
+    char getBMP280();
+    void initIMU();
     char getIMU();
     char getSensors();
 

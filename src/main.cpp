@@ -2,12 +2,18 @@
 #include <Wire.h>
 #include "Avionics.h"
 
-void setup() {
-  // put your setup code here, to run once:
-  // Vamo caralho birl
-  // testando porra
+Avionics rocket;
+
+void setup()
+{
+  
+  rocket.init();
+
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop()
+{
+  
+  rocket.update();
+  
 }
