@@ -1,16 +1,28 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "Adafruit_BMP280.h"
+#include <SD.h>
+#include <SPI.h>
+#include <EEPROM.h>
+#include <Adafruit_BMP280.h>
 #include <SoftwareSerial.h>
+<<<<<<< HEAD
 //#include <TinyGPS>
+=======
+#include <TinyGPS.h>
+#include <Adafruit_INA219.h>
+>>>>>>> 404e19a3c98cc7525deaae6f27a307076fe62a08
 #include "Avionics.h"
 #include "AvionicsConsts.h"
 
 Avionics::Avionics()  {};
 
-Adafruit_BMP280 bmp280;
+
+
+Adafruit_INA219 ina219;        // Criação do obtejo ina219                   
 
 int accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
+
+const int chipSelect = BUILTIN_SDCARD;       // Teensy 3.5 & 3.6 on-board
 
 void Avionics::init()
 {
@@ -18,6 +30,10 @@ void Avionics::init()
   initBMP180();
   initBMP280();
   initIMU();
+  initGPS();
+  initINA219();
+  initSD();
+  initEEPROM();
 
 }
 
@@ -42,6 +58,7 @@ void Avionics::initBMP280()
   {
     Serial.println(F("Could not find a BMP280 sensor."));
   }
+
   bmp280.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                      Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                      Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
