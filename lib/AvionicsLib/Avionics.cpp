@@ -8,8 +8,6 @@
 #include "AvionicsConsts.h"
 
 
-
-
 Avionics::Avionics()  {};
 
 Adafruit_BMP280 bmp280;
@@ -45,7 +43,7 @@ void Avionics::initBMP280()
                      Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 }
 ///////////////////////////////DIEGO///////////////////////////////
-void Avionics::getBMP280(IMU_s *imu)
+void Avionics::getBMP280(STATE_s *imu)
 {
   char bmp280Data[2];
   float bmp280Temperature, bmp280Pressure;
@@ -68,7 +66,7 @@ void Avionics::initIMU()
 
 }
 ///////////////////////////////DIEGO///////////////////////////////
-void Avionics::getIMU(IMU_s *imu)
+void Avionics::getIMU(STATE_s *imu)
 {
   float accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
   //float returnAccelArray[3], returnGyroArray[3];
@@ -108,4 +106,10 @@ void Avionics::getIMU(IMU_s *imu)
   imu->giroscopio[0] = gyroX;
   imu->giroscopio[1] = gyroY;  
   imu->giroscopio[2] = gyroZ;;
+}
+
+
+void Avionics::filterStates(STATE_s *state)
+{
+  
 }

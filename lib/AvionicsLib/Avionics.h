@@ -7,7 +7,7 @@ typedef struct
     float magnetometro[3]; //Posicoes 1,2,3, respectivamente sao as Campos Magneticos em x,y,z
     float giroscopio[3]; //Posicoes 1, 2, 3, respectivamente sao a velocidade angular em x,y,z
     float barometro[3]; //Posicoes 1,2,3 respectivamente sao Pressao, Altura e Temperatura
-}IMU_s; //IMU Structure
+}STATE_s; //IMU Structure
 
 class Avionics
 {
@@ -18,9 +18,9 @@ class Avionics
     void  update();
 
     void  initBMP280();
-    void getBMP280(IMU_s *imu);
+    void getBMP280(STATE_s *imu);
     void  initIMU();
-    void  getIMU(IMU_s *imu);
+    void  getIMU(STATE_s *imu);
     void  initINA();
     float getINA();
     float getSensors();
