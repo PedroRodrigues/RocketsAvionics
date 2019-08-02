@@ -6,21 +6,23 @@ class Avionics
   public:
     Avionics();
 
-    void init();
-    void update();
+    void  init();
+    void  update();
 
-    void initBMP180();
+    void  initBMP180();
     float getBMP180();
-    void initBMP280();
+    void  initBMP280();
     float getBMP280();
-    void initIMU();
+    void  initIMU();
     float getIMU();
+    void  initINA();
+    float getINA();
     float getSensors();
 
-    void updateAltitudes(float actState[4][3]);
-    void filterAltitudes(float actState[4][3]);
-    void finiteDifferences(float actState[4][3]);
-    void detectApogge(float actState[4][3]);    
+    void  updateAltitudes(float actState[][]);
+    void  filterAltitudes(float actState[][]);
+    void  finiteDifferences(float actState[][]);
+    void  detectApogge(float actState[][]);    
 };
 
 class DataFlight
