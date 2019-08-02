@@ -1,16 +1,24 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "Adafruit_BMP280.h"
+#include <SD.h>
+#include <SPI.h>
+#include <EEPROM.h>
+#include <Adafruit_BMP280.h>
 #include <SoftwareSerial.h>
-#include <TinyGPS>
+#include <TinyGPS.h>
+#include <Adafruit_INA219.h>
 #include "Avionics.h"
 #include "AvionicsConsts.h"
 
 Avionics::Avionics()  {};
 
-Adafruit_BMP280 bmp280;
+Adafruit_BMP280 bmp280;        // Criação do objeto bmp280
+
+Adafruit_INA219 ina219;        // Criação do obtejo ina219                   
 
 int accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
+
+const int chipSelect = BUILTIN_SDCARD;       // Teensy 3.5 & 3.6 on-board
 
 void Avionics::init()
 {
