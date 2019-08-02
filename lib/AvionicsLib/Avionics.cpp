@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "Adafruit_BMP280.h"
+#include <SoftwareSerial.h>
+#include <TinyGPS>
 #include "Avionics.h"
 #include "AvionicsConsts.h"
 
