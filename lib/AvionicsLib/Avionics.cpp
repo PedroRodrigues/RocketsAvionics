@@ -12,7 +12,7 @@
 
 Avionics::Avionics()  {};
 
-Adafruit_BMP280 bmp280;        // Criação do objeto bmp280
+
 
 Adafruit_INA219 ina219;        // Criação do obtejo ina219                   
 
@@ -26,6 +26,10 @@ void Avionics::init()
   initBMP180();
   initBMP280();
   initIMU();
+  initGPS();
+  initINA219();
+  initSD();
+  initEEPROM();
 
 }
 
@@ -50,6 +54,7 @@ void Avionics::initBMP280()
   {
     Serial.println(F("Could not find a BMP280 sensor."));
   }
+
   bmp280.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                      Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                      Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
