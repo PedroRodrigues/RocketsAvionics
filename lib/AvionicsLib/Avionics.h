@@ -10,17 +10,17 @@ class Avionics
     void update();
 
     void initBMP180();
-    char getBMP180();
+    float getBMP180();
     void initBMP280();
-    char getBMP280();
+    float getBMP280();
     void initIMU();
-    char getIMU();
-    char getSensors();
+    float getIMU();
+    float getSensors();
 
-    void updateAltitudes();
-    void filterAltitudes();
-    void finiteDifferences();
-    void detectApogge();    
+    void updateAltitudes(float actState[4][3]);
+    void filterAltitudes(float actState[4][3]);
+    void finiteDifferences(float actState[4][3]);
+    void detectApogge(float actState[4][3]);    
 };
 
 class DataFlight

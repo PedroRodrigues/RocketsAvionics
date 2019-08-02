@@ -29,7 +29,7 @@ void Avionics::initBMP180()
 
 }
 ///////////////////////////////DIEGO///////////////////////////////
-char Avionics::getBMP180()
+float Avionics::getBMP180()
 {
 
 }
@@ -47,7 +47,7 @@ void Avionics::initBMP280()
                      Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 }
 ///////////////////////////////DIEGO///////////////////////////////
-char Avionics::getBMP280()
+float Avionics::getBMP280()
 {
   char bmp280Data[2];
   float bmp280Temperature, bmp280Pressure;
@@ -71,7 +71,7 @@ void Avionics::initIMU()
 
 }
 ///////////////////////////////DIEGO///////////////////////////////
-char Avionics::getIMU()
+float Avionics::getIMU()
 {
   Wire2.beginTransmission(MPU_ADDRESS);
   Wire2.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
@@ -102,7 +102,7 @@ char Avionics::getIMU()
   */
 }
 ///////////////////////////////DIEGO///////////////////////////////
-char Avionics::getSensors()
+float Avionics::getSensors()
 {
   char bmp180, bmp280, IMU, returnSensors;
   
