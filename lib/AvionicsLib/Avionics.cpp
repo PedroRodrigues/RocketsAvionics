@@ -1,14 +1,14 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "Adafruit_BMP280.h"
+#include <Adafruit_BMP280.h>
+#include <Adafruit_INA219.h>
 #include "Avionics.h"
 #include "AvionicsConsts.h"
 
 Avionics::Avionics()  {};
 
 Adafruit_BMP280 bmp280;
-
-int accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
+Adafruit_INA219 ina219;
 
 void Avionics::init()
 {
@@ -16,6 +16,7 @@ void Avionics::init()
   initBMP180();
   initBMP280();
   initIMU();
+  initINA();
 
 }
 
@@ -40,6 +41,7 @@ void Avionics::initBMP280()
   {
     Serial.println(F("Could not find a BMP280 sensor."));
   }
+  
   bmp280.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                      Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                      Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
@@ -73,6 +75,9 @@ void Avionics::initIMU()
 ///////////////////////////////DIEGO///////////////////////////////
 float Avionics::getIMU()
 {
+  int accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
+  float returnAccelArray[3], returnGyroArray[3];
+
   Wire2.beginTransmission(MPU_ADDRESS);
   Wire2.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
   Wire2.endTransmission(false);
@@ -89,7 +94,14 @@ float Avionics::getIMU()
   gyroY=Wire2.read()<<8|Wire2.read(); //0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   gyroZ=Wire2.read()<<8|Wire2.read(); //0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 
-   
+  returnAccelArray[0] = accelX;
+  returnAccelArray[1] = accelY;
+  returnAccelArray[2] = accelZ;
+
+  returnGyroArray[0] = gyroX;
+  returnGyroArray[1] = gyroY;
+  returnGyroArray[2] = gyroZ;
+
   /*
   //Mostra os valores na serial
   Serial.print("Acel. X = "); Serial.print(AcX);
@@ -100,32 +112,63 @@ float Avionics::getIMU()
   Serial.print(" | Z = "); Serial.print(GyZ);
   Serial.print(" | Temp = "); Serial.println(Tmp/340.00+36.53);
   */
+
+  return returnAccelArray, returnGyroArray;
+
 }
 ///////////////////////////////DIEGO///////////////////////////////
 float Avionics::getSensors()
 {
-  char bmp180, bmp280, IMU, returnSensors;
+  float bmp180[3], bmp280[3], IMU[6], returnSensors[4][3];
   
 
-  bmp180 = getBMP180():
+  bmp180[] = getBMP180();
 }
 
-void Avionics::updateAltitudes()
+void Avionics::initINA()
+{
+  uint32_t currentFrequency;
+
+  if (!(ina219.begin()))
+  {
+    Serial.println(F("Could not find a INA219 sensor."));
+  };
+
+}
+
+float Avionics::getINA()
+{
+  float shuntVoltage;
+  float busVoltage;
+  float current_mA;
+  float loadVoltage;
+  float power_mW;
+
+  shuntVoltage = ina219.getShuntVoltage_mV();
+  busVoltage = ina219.getBusVoltage_V();
+  current_mA = ina219.getCurrent_mA();
+  power_mW = ina219.getPower_mW();
+  loadVoltage = busVoltage + (shuntVoltage / 1000);
+  
+  
+}
+
+void Avionics::updateAltitudes(float actState[20])
 {
 
 }
 
-void Avionics::filterAltitudes()
+void Avionics::filterAltitudes(float actState[20])
 {
 
 }
 
-void Avionics::finiteDifferences()
+void Avionics::finiteDifferences(float actState[20])
 {
 
 }
 
-void Avionics::detectApogge()
+void Avionics::detectApogge(float actState[20])
 {
 
 }

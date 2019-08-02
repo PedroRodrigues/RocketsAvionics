@@ -19,10 +19,10 @@ class Avionics
     float getINA();
     float getSensors();
 
-    void  updateAltitudes(float actState[][]);
-    void  filterAltitudes(float actState[][]);
-    void  finiteDifferences(float actState[][]);
-    void  detectApogge(float actState[][]);    
+    void  updateAltitudes(float State[][]);
+    void  filterAltitudes(float State[][]);
+    void  finiteDifferences(float State[][]);
+    void  detectApogge(float State[][]);    
 };
 
 class DataFlight
