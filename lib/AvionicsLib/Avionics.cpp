@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <Wire.h>
+<<<<<<< HEAD
+#include <Adafruit_BMP280.h>
+=======
 #include <SD.h>
 #include <SPI.h>
 #include <EEPROM.h>
@@ -9,6 +12,7 @@
 //#include <TinyGPS>
 =======
 #include <TinyGPS.h>
+>>>>>>> 404e19a3c98cc7525deaae6f27a307076fe62a08
 #include <Adafruit_INA219.h>
 >>>>>>> 404e19a3c98cc7525deaae6f27a307076fe62a08
 #include "Avionics.h"
@@ -16,11 +20,16 @@
 
 Avionics::Avionics()  {};
 
+<<<<<<< HEAD
+Adafruit_BMP280 bmp280;
+Adafruit_INA219 ina219;
+=======
 
 
 Adafruit_INA219 ina219;        // Criação do obtejo ina219                   
 
 int accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
+>>>>>>> 404e19a3c98cc7525deaae6f27a307076fe62a08
 
 const int chipSelect = BUILTIN_SDCARD;       // Teensy 3.5 & 3.6 on-board
 
@@ -30,10 +39,14 @@ void Avionics::init()
   initBMP180();
   initBMP280();
   initIMU();
+<<<<<<< HEAD
+  initINA();
+=======
   initGPS();
   initINA219();
   initSD();
   initEEPROM();
+>>>>>>> 404e19a3c98cc7525deaae6f27a307076fe62a08
 
 }
 
@@ -58,7 +71,11 @@ void Avionics::initBMP280()
   {
     Serial.println(F("Could not find a BMP280 sensor."));
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 404e19a3c98cc7525deaae6f27a307076fe62a08
   bmp280.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                      Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                      Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
@@ -94,6 +111,9 @@ void Avionics::initIMU()
 ///////////////////////////////DIEGO///////////////////////////////
 float Avionics::getIMU()
 {
+  int accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
+  float returnAccelArray[3], returnGyroArray[3];
+
   Wire2.beginTransmission(MPU_ADDRESS);
   Wire2.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
   Wire2.endTransmission(false);
@@ -110,6 +130,7 @@ float Avionics::getIMU()
   gyroY=Wire2.read()<<8|Wire2.read(); //0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   gyroZ=Wire2.read()<<8|Wire2.read(); //0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 
+<<<<<<< HEAD
    
   
   //Mostra os valores na serial
@@ -121,32 +142,90 @@ float Avionics::getIMU()
   Serial.print(" | Z = "); Serial.print(gyroZ);
   Serial.print(" | Temp = "); Serial.println(internalTemp/340.00+36.53);
   
+=======
+  returnAccelArray[0] = accelX;
+  returnAccelArray[1] = accelY;
+  returnAccelArray[2] = accelZ;
+
+  returnGyroArray[0] = gyroX;
+  returnGyroArray[1] = gyroY;
+  returnGyroArray[2] = gyroZ;
+
+  /*
+  //Mostra os valores na serial
+  Serial.print("Acel. X = "); Serial.print(AcX);
+  Serial.print(" | Y = "); Serial.print(AcY);
+  Serial.print(" | Z = "); Serial.print(AcZ);
+  Serial.print(" | Gir. X = "); Serial.print(GyX);
+  Serial.print(" | Y = "); Serial.print(GyY);
+  Serial.print(" | Z = "); Serial.print(GyZ);
+  Serial.print(" | Temp = "); Serial.println(Tmp/340.00+36.53);
+  */
+
+  return returnAccelArray, returnGyroArray;
+
+>>>>>>> 7f78603fac84adc8e9569a17826488292e070402
 }
 ///////////////////////////////DIEGO///////////////////////////////
 float Avionics::getSensors()
 {
-  char bmp180, bmp280, IMU, returnSensors;
+  float bmp180[3], bmp280[3], IMU[6], returnSensors[4][3];
   
 
+<<<<<<< HEAD
   bmp180 = getBMP180();
 }
 
 /* void Avionics::updateAltitudes()
+=======
+  bmp180[] = getBMP180();
+}
+
+void Avionics::initINA()
+{
+  uint32_t currentFrequency;
+
+  if (!(ina219.begin()))
+  {
+    Serial.println(F("Could not find a INA219 sensor."));
+  };
+
+}
+
+float Avionics::getINA()
+{
+  float shuntVoltage;
+  float busVoltage;
+  float current_mA;
+  float loadVoltage;
+  float power_mW;
+
+  shuntVoltage = ina219.getShuntVoltage_mV();
+  busVoltage = ina219.getBusVoltage_V();
+  current_mA = ina219.getCurrent_mA();
+  power_mW = ina219.getPower_mW();
+  loadVoltage = busVoltage + (shuntVoltage / 1000);
+  
+  
+}
+
+void Avionics::updateAltitudes(float actState[20])
+>>>>>>> 7f78603fac84adc8e9569a17826488292e070402
 {
 
 }
 
-void Avionics::filterAltitudes()
+void Avionics::filterAltitudes(float actState[20])
 {
 
 }
 
-void Avionics::finiteDifferences()
+void Avionics::finiteDifferences(float actState[20])
 {
 
 }
 
-void Avionics::detectApogge()
+void Avionics::detectApogge(float actState[20])
 {
 
 }
