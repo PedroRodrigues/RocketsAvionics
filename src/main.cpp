@@ -15,5 +15,6 @@ void loop()
 {
   
   rocket.update();
+  rocket.getIMU();
   
 }

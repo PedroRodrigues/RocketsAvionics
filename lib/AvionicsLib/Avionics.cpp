@@ -2,7 +2,7 @@
 #include <Wire.h>
 #include "Adafruit_BMP280.h"
 #include <SoftwareSerial.h>
-#include <TinyGPS>
+//#include <TinyGPS>
 #include "Avionics.h"
 #include "AvionicsConsts.h"
 
@@ -57,6 +57,8 @@ float Avionics::getBMP280()
   bmp280Data[0] = bmp280.readTemperature();
   bmp280Pressure = bmp280.readPressure();
 
+  Serial.print("Pressure :");Serial.println(bmp280Pressure);
+
 
 
   return *bmp280Data;
@@ -92,16 +94,16 @@ float Avionics::getIMU()
   gyroZ=Wire2.read()<<8|Wire2.read(); //0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 
    
-  /*
+  
   //Mostra os valores na serial
-  Serial.print("Acel. X = "); Serial.print(AcX);
-  Serial.print(" | Y = "); Serial.print(AcY);
-  Serial.print(" | Z = "); Serial.print(AcZ);
-  Serial.print(" | Gir. X = "); Serial.print(GyX);
-  Serial.print(" | Y = "); Serial.print(GyY);
-  Serial.print(" | Z = "); Serial.print(GyZ);
-  Serial.print(" | Temp = "); Serial.println(Tmp/340.00+36.53);
-  */
+  Serial.print("Acel. X = "); Serial.print(accelX);
+  Serial.print(" | Y = "); Serial.print(accelY);
+  Serial.print(" | Z = "); Serial.print(accelZ);
+  Serial.print(" | Gir. X = "); Serial.print(gyroX);
+  Serial.print(" | Y = "); Serial.print(gyroY);
+  Serial.print(" | Z = "); Serial.print(gyroZ);
+  Serial.print(" | Temp = "); Serial.println(internalTemp/340.00+36.53);
+  
 }
 ///////////////////////////////DIEGO///////////////////////////////
 float Avionics::getSensors()
@@ -109,10 +111,10 @@ float Avionics::getSensors()
   char bmp180, bmp280, IMU, returnSensors;
   
 
-  bmp180 = getBMP180():
+  bmp180 = getBMP180();
 }
 
-void Avionics::updateAltitudes()
+/* void Avionics::updateAltitudes()
 {
 
 }
@@ -131,4 +133,4 @@ void Avionics::detectApogge()
 {
 
 }
-
+*/
