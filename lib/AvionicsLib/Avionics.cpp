@@ -13,15 +13,12 @@ Avionics::Avionics()  {};
 Adafruit_BMP280 bmp280;
 Adafruit_INA219 ina219;                
 
-int accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
-
-//const int chipSelect = BUILTIN_SDCARD;       // Teensy 3.5 & 3.6 on-board
-
 void Avionics::init()
 {
   Serial.begin(9600);
   initBMP280();
   initIMU();
+  initINA();
 }
 
 void Avionics::update()
@@ -42,17 +39,16 @@ void Avionics::initBMP280()
                      Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                      Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 }
-///////////////////////////////DIEGO///////////////////////////////
-void Avionics::getBMP280(STATE_s *imu)
+
+void Avionics::getBMP280(StateStruct *sBarometer)
 {
-  char bmp280Data[2];
   float bmp280Temperature, bmp280Pressure;
 
-  bmp280Data[0] = bmp280.readTemperature();
+  bmp280Temperature = bmp280.readTemperature();
   bmp280Pressure = bmp280.readPressure();
 
-  imu->barometro[0] =  bmp280Data[0];
-  imu->barometro[1] =  bmp280Pressure;
+  sBarometer->barometer[0] =  bmp280Pressure;
+  sBarometer->barometer[1] =  bmp280Temperature;
 }
 
 void Avionics::initIMU()
@@ -63,13 +59,11 @@ void Avionics::initIMU()
 
   Wire2.write(0); 
   Wire2.endTransmission(true);
-
 }
-///////////////////////////////DIEGO///////////////////////////////
-void Avionics::getIMU(STATE_s *imu)
+
+void Avionics::getIMU(StateStruct *sImu)
 {
-  float accelX,accelY,accelZ,internalTemp,gyroX,gyroY,gyroZ;
-  //float returnAccelArray[3], returnGyroArray[3];
+  float accelX, accelY, accelZ, internalTemp, gyroX, gyroY, gyroZ;
 
   Wire2.beginTransmission(MPU_ADDRESS);
   Wire2.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
@@ -86,8 +80,7 @@ void Avionics::getIMU(STATE_s *imu)
   gyroX=Wire2.read()<<8|Wire2.read(); //0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
   gyroY=Wire2.read()<<8|Wire2.read(); //0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   gyroZ=Wire2.read()<<8|Wire2.read(); //0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
-   
-  
+    
   //Mostra os valores na serial
   /*Serial.print("Acel. X = "); Serial.print(accelX);
   Serial.print(" | Y = "); Serial.print(accelY);
@@ -96,20 +89,42 @@ void Avionics::getIMU(STATE_s *imu)
   Serial.print(" | Y = "); Serial.print(gyroY);
   Serial.print(" | Z = "); Serial.print(gyroZ);
   Serial.print(" | Temp = "); Serial.println(internalTemp/340.00+36.53);
-*/
-  //Serial.print("AccelX in fuction :");Serial.println(accelX);
-  //Serial.print("AccelY in fuction :");Serial.println(accelY);
-  imu->acelerometro[0] = accelX;
-  imu->acelerometro[1] = accelY;
-  imu->acelerometro[2] = accelZ;
+  */
 
-  imu->giroscopio[0] = gyroX;
-  imu->giroscopio[1] = gyroY;  
-  imu->giroscopio[2] = gyroZ;;
+  sImu->accelerometer[0] = accelX;
+  sImu->accelerometer[1] = accelY;
+  sImu->accelerometer[2] = accelZ;
+
+  sImu->gyroscope[0] = gyroX;
+  sImu->gyroscope[1] = gyroY;  
+  sImu->gyroscope[2] = gyroZ;;
 }
 
+void Avionics::initINA()
+{
+  ina219.begin();
+}
 
-void Avionics::filterStates(STATE_s *state)
+void Avionics::getINA(StateStruct *sIna)
+{
+  float shuntvoltage = 0;
+  float busvoltage = 0;
+  float current = 0;
+  float loadVoltage = 0;
+  float power = 0;
+
+  shuntvoltage = ina219.getShuntVoltage_mV();
+  busvoltage = ina219.getBusVoltage_V();
+  current = ina219.getCurrent_mA();
+  power = ina219.getPower_mW();
+  loadVoltage = busvoltage + (shuntvoltage / 1000);
+
+  sIna->ina[0] = loadVoltage;
+  sIna->ina[1] = current;
+  sIna->ina[2] = power;
+}
+
+void Avionics::filterStates(StateStruct *sState)
 {
   
 }

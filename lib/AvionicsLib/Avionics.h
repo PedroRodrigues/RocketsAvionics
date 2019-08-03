@@ -3,48 +3,41 @@
 
 typedef struct
 {
-    float acelerometro[3]; //Posicoes 1,2,3, respectivamente sao as Aceleracoes em x,y,z
-    float magnetometro[3]; //Posicoes 1,2,3, respectivamente sao as Campos Magneticos em x,y,z
-    float giroscopio[3]; //Posicoes 1, 2, 3, respectivamente sao a velocidade angular em x,y,z
-    float barometro[3]; //Posicoes 1,2,3 respectivamente sao Pressao, Altura e Temperatura
-}STATE_s; //IMU Structure
+    float accelerometer[3]; //Posicoes 1,2 e 3, respectivamente sao as Aceleracoes em x,y,z
+    float gyroscope[3]; //Posicoes 1, 2 e 3, respectivamente sao a velocidade angular em x,y,z
+    float barometer[2]; //Posicoes 1 e 2 respectivamente sao Pressao e Temperatura
+    float ina[3]; //Posicoes 1, 2 e 3 respectivamente são a Tensão, Corrente e Potencia.
+
+
+    float state;
+    float altitude;
+
+} StateStruct; //State Structure
 
 class Avionics
 {
   public:
     Avionics();
 
-    void  init();
-    void  update();
+    void init();
+    void update();
 
-    void  initBMP280();
-    void getBMP280(STATE_s *imu);
-    void  initIMU();
-    void  getIMU(STATE_s *imu);
-    void  initINA();
-    float getINA();
-    float getSensors();
-    float ReturnAccel[3];
-    float ReturnGyro[3];
+    void initBMP280();
+    void getBMP280(StateStruct *sBarometer);
+    void initIMU();
+    void getIMU(StateStruct *sImu);
+    void initINA();
+    void getINA(StateStruct *sIna);
+    void getSensors();
 
-    //void  updateAltitudes(float State[][]);
-    //void  filterAltitudes(float State[][]);
-    //void  finiteDifferences(float State[][]);
-    //void  detectApogge(float State[][]); 
+    void filterAltitudes(StateStruct *sAltitude);
+    void updateAltitudes();
+    void filterStates(StateStruct *sState);
+    void finiteDifferences();
+    void detectApogge(); 
     
     
 
 };
-
-class DataFlight
-{
-  public:
-    DataFlight();
-
-    float prevState();
-    float actState();
-};
-
-
 
 #endif
