@@ -8,10 +8,13 @@
 #include "AvionicsConsts.h"
 
 
-Avionics::Avionics()  {};
+Avionics::Avionics(){};
+
+StateStruct sActState;
+StateStruct *spActState = &sActState;
 
 Adafruit_BMP280 bmp280;
-Adafruit_INA219 ina219;                
+Adafruit_INA219 ina219;
 
 void Avionics::init()
 {
@@ -19,11 +22,27 @@ void Avionics::init()
   initBMP280();
   initIMU();
   initINA();
+  initFlight();
+
 }
 
 void Avionics::update()
 {
+  
+}
 
+void Avionics::debug()
+{
+  Serial.print("Pressure = "); Serial.print(sActState.barometer[0]);
+  Serial.print(" | Temperature = "); Serial.println(sActState.barometer[1]);
+  delay(500);
+  Serial.print("Acel. X = "); Serial.print(sActState.accelerometer[0]);
+  Serial.print(" | Y = "); Serial.print(sActState.accelerometer[1]);
+  Serial.print(" | Z = "); Serial.print(sActState.accelerometer[2]);
+  Serial.print(" | Gir. X = "); Serial.print(sActState.gyroscope[0]);
+  Serial.print(" | Y = "); Serial.print(sActState.gyroscope[1]);
+  Serial.print(" | Z = "); Serial.println(sActState.gyroscope[2]);
+  delay(250);
 }
 
 void Avionics::initBMP280()
@@ -47,14 +66,14 @@ void Avionics::getBMP280(StateStruct *sBarometer)
   bmp280Temperature = bmp280.readTemperature();
   bmp280Pressure = bmp280.readPressure();
 
-  sBarometer->barometer[0] =  bmp280Pressure;
-  sBarometer->barometer[1] =  bmp280Temperature;
+  sBarometer->barometer[1] =  bmp280Pressure;
+  sBarometer->barometer[0] =  bmp280Temperature;
 }
 
 void Avionics::initIMU()
 {
   Wire2.begin();
-  Wire2.beginTransmission(MPU_ADDRESS);
+  Wire2.beginTransmission(IMU_ADDRESS);
   Wire2.write(0x6B);
 
   Wire2.write(0); 
@@ -63,20 +82,24 @@ void Avionics::initIMU()
 
 void Avionics::getIMU(StateStruct *sImu)
 {
-  float accelX, accelY, accelZ, internalTemp, gyroX, gyroY, gyroZ;
+  float accelX, accelY, accelZ, gyroX, gyroY, gyroZ;
+  float  internalTemp;
 
-  Wire2.beginTransmission(MPU_ADDRESS);
+
+
+
+  Wire2.beginTransmission(IMU_ADDRESS);
   Wire2.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
   Wire2.endTransmission(false);
   
   //Solicita os dados do sensor
-  Wire2.requestFrom(MPU_ADDRESS,14,true);  
+  Wire2.requestFrom(IMU_ADDRESS,14,true);  
   
   //Armazena o valor dos sensores nas variaveis correspondentes
   accelX=Wire2.read()<<8|Wire2.read(); //0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)     
   accelY=Wire2.read()<<8|Wire2.read(); //0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
   accelZ=Wire2.read()<<8|Wire2.read(); //0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
-  internalTemp=Wire2.read()<<8|Wire2.read(); //0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
+  //internalTemp=Wire2.read()<<8|Wire2.read(); //0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
   gyroX=Wire2.read()<<8|Wire2.read(); //0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
   gyroY=Wire2.read()<<8|Wire2.read(); //0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   gyroZ=Wire2.read()<<8|Wire2.read(); //0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
@@ -122,6 +145,25 @@ void Avionics::getINA(StateStruct *sIna)
   sIna->ina[0] = loadVoltage;
   sIna->ina[1] = current;
   sIna->ina[2] = power;
+}
+
+void Avionics::getSensors()
+{
+  getBMP280(spActState);
+  getIMU(spActState);
+  getINA(spActState);
+}
+
+void Avionics::getAltitude(StateStruct *sAltitude)
+{
+  bmp280.readAltitude();
+}
+
+void Avionics::initFlight()
+{
+  sActState.main = 0;
+  sActState.drogue = 0;
+  
 }
 
 void Avionics::filterStates(StateStruct *sState)
