@@ -5,21 +5,30 @@
 
 typedef struct
 {
-    float accelerometer[3]; //Posicoes 1,2 e 3, respectivamente sao as Aceleracoes em x,y,z
-    float gyroscope[3]; //Posicoes 1, 2 e 3, respectivamente sao a velocidade angular em x,y,z
-    float barometer[2]; //Posicoes 1 e 2 respectivamente sao Pressao e Temperatura
-    float ina[3]; //Posicoes 1, 2 e 3 respectivamente são a Tensão, Corrente e Potencia.
+  // atualizado pelo getSensors();
+  float accelerometer[3] = {0}; //Posicoes 1,2 e 3, respectivamente sao as Aceleracoes em x,y,z
+  float gyroscope[3] = {0}; //Posicoes 1, 2 e 3, respectivamente sao a velocidade angular em x,y,z
+  float barometer[4] = {0}; //respectivamente sao temperatura, pressao, altitude MSL e AGL.
+  float ina[3] = {0}; //Posicoes 1, 2 e 3 respectivamente são a Tensão, Corrente e Potencia.
+  // fim do getSensors();
 
+  float altitudeHistory[MEMORY_SIZE] = {0}; //Memoria das ultimas altitudes.
+  float filteredHistory[MEMORY_SIZE - FILTER_SIZE + 1] = {0}; //Altitudes filtradas.
+  float finiteDifferences[MEMORY_SIZE - FILTER_SIZE] = {0}; //Velocidade vertical.
 
-    float altitudeHistory[MEMORY_SIZE]; //Memoria das ultimas altitudes.
-    float filteredHistory[MEMORY_SIZE - FILTER_SIZE + 1]; //Altitudes filtradas.
-    float finiteDifferences[MEMORY_SIZE - FILTER_SIZE]; //Velocidade vertical.
+  float flightState; // 0 chao, 1 voo, 2 drogue, 3 main, 4 chao;
 
-    float flightState; // 0 chao, 1 voo, 2 drogue, 3 main, 4 chao;
+  float AGL; // Above Ground Level - altitude reference for 'ground';
+  float AGL_Variance;
 
-    float altitude;
-    float main;
-    float drogue;
+  float main;
+  unsigned long long main_time;
+
+  float drogue;
+  unsigned long long drogue_time;
+
+  unsigned long long state_time;
+
 } StateStruct; //State Structure
 
 class Avionics
@@ -29,7 +38,9 @@ class Avionics
 
     void init();
     void update();
-    void debug();
+    void serialDebug();
+
+    void boardDebug();
 
     void initBMP280();
     void getBMP280(StateStruct *sBarometer);
@@ -38,14 +49,13 @@ class Avionics
     void initINA();
     void getINA(StateStruct *sIna);
     void getSensors();
-    void getAltitude(StateStruct *sAltitude);
 
     void initFlight();
-    void filterAltitudes(StateStruct *sAltitude);
-    void updateAltitudes();
-    void filterStates(StateStruct *sFlightState);
+    void updateState();
+    void filterAltitudes();
     void finiteDifferences();
-    void detectApogge(); 
+    void updateFlightState();
+    void activateServos(); 
 };
 
 #endif

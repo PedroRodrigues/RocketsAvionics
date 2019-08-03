@@ -7,7 +7,6 @@
 #include "Avionics.h"
 #include "AvionicsConsts.h"
 
-
 Avionics::Avionics(){};
 
 StateStruct sActState;
@@ -23,26 +22,91 @@ void Avionics::init()
   initIMU();
   initINA();
   initFlight();
-
 }
 
 void Avionics::update()
 {
+  if (millis() - sActState.state_time > UPDATE_DELAY_STATE)
+  {
+    sActState.state_time = millis();
+
+    updateState();
+    filterAltitudes();
+    finiteDifferences();
+    updateFlightState();
+    activateServos();
+
+    if (DEBUG_BOARD)
+    {
+      boardDebug();
+    }
+    
+    if(DEBUG_SERIAL)
+    {
+      serialDebug();
+    }
+    
+  }
   
 }
 
-void Avionics::debug()
+void Avionics::serialDebug()
 {
-  Serial.print("Pressure = "); Serial.print(sActState.barometer[0]);
-  Serial.print(" | Temperature = "); Serial.println(sActState.barometer[1]);
-  delay(500);
+
+  Serial.print("flightState = "); Serial.print(sActState.flightState);
+  Serial.print(" | AGL_Ref = "); Serial.print(sActState.AGL);
+  Serial.print(" | AGL_Var = "); Serial.print(sActState.AGL_Variance);
+
+  Serial.print(" | Alt_AGL = "); Serial.print(sActState.barometer[3]);
+  Serial.print(" | Drogue = "); Serial.print(sActState.drogue);
+  Serial.print(" | Main = "); Serial.print(sActState.main);
+
+
+  Serial.print(" || Temperature = "); Serial.print(sActState.barometer[0]);
+  Serial.print(" | Pressure = "); Serial.println(sActState.barometer[1]);
+  Serial.print(" | Altitude_MSL = "); Serial.println(sActState.barometer[2]);
+  //delay(500);
   Serial.print("Acel. X = "); Serial.print(sActState.accelerometer[0]);
   Serial.print(" | Y = "); Serial.print(sActState.accelerometer[1]);
   Serial.print(" | Z = "); Serial.print(sActState.accelerometer[2]);
   Serial.print(" | Gir. X = "); Serial.print(sActState.gyroscope[0]);
   Serial.print(" | Y = "); Serial.print(sActState.gyroscope[1]);
   Serial.print(" | Z = "); Serial.println(sActState.gyroscope[2]);
-  delay(250);
+  //delay(250);
+}
+
+void Avionics::boardDebug()
+{
+  if (sActState.flightState == 0)
+  {
+  digitalWrite(LED_R_PIN, LOW);
+  digitalWrite(LED_Y_PIN, LOW);
+  digitalWrite(LED_G_PIN, HIGH);
+  }
+  else if (sActState.flightState == 1)
+  {
+  digitalWrite(LED_R_PIN, LOW);
+  digitalWrite(LED_Y_PIN, HIGH);
+  digitalWrite(LED_G_PIN, HIGH);
+  }
+  else if (sActState.flightState == 2)
+  {
+  digitalWrite(LED_R_PIN, HIGH);
+  digitalWrite(LED_Y_PIN, HIGH);
+  digitalWrite(LED_G_PIN, HIGH);
+  }
+  else if (sActState.flightState == 3)
+  {
+  digitalWrite(LED_R_PIN, HIGH);
+  digitalWrite(LED_Y_PIN, HIGH);
+  digitalWrite(LED_G_PIN, LOW);
+  }
+  else if (sActState.flightState == 4)
+  {
+  digitalWrite(LED_R_PIN, HIGH);
+  digitalWrite(LED_Y_PIN, LOW);
+  digitalWrite(LED_G_PIN, LOW);
+  }
 }
 
 void Avionics::initBMP280()
@@ -61,13 +125,16 @@ void Avionics::initBMP280()
 
 void Avionics::getBMP280(StateStruct *sBarometer)
 {
-  float bmp280Temperature, bmp280Pressure;
+  float bmp280Temperature, bmp280Pressure, bmp280Altitude;
 
   bmp280Temperature = bmp280.readTemperature();
   bmp280Pressure = bmp280.readPressure();
+  bmp280Altitude = bmp280.readAltitude();
 
-  sBarometer->barometer[1] =  bmp280Pressure;
-  sBarometer->barometer[0] =  bmp280Temperature;
+  sBarometer->barometer[0] = bmp280Temperature; // temperatura celcius.
+  sBarometer->barometer[1] = bmp280Pressure; // pressao hPa.
+  sBarometer->barometer[2] = bmp280Altitude; // altitude MSL.
+  sBarometer->barometer[3] = bmp280Altitude - sActState.AGL; // altitude AGL.
 }
 
 void Avionics::initIMU()
@@ -154,19 +221,224 @@ void Avionics::getSensors()
   getINA(spActState);
 }
 
-void Avionics::getAltitude(StateStruct *sAltitude)
-{
-  bmp280.readAltitude();
-}
-
 void Avionics::initFlight()
 {
-  sActState.main = 0;
-  sActState.drogue = 0;
-  
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, HIGH);
+
+  pinMode(LED_R_PIN, OUTPUT);
+  digitalWrite(LED_R_PIN, HIGH);
+
+  pinMode(LED_Y_PIN, OUTPUT);
+  digitalWrite(LED_Y_PIN, HIGH);
+
+  pinMode(LED_G_PIN, OUTPUT);
+  digitalWrite(LED_G_PIN, HIGH);
+
+  delay(DEBUG_INIT_TIME);
+  digitalWrite(BUZZER_PIN, LOW);
+  digitalWrite(LED_R_PIN, LOW);
+  digitalWrite(LED_Y_PIN, LOW);
+  digitalWrite(LED_G_PIN, LOW);
+
+  sActState.flightState = 0; // initial ground state;
+
+  sActState.drogue = 0; // initial drogue parachute not deployed;
+  sActState.main = 0; // initial main parachute not deployed;
+
+
+  float AGL_Buffer[AGL_CALIBRATION_SAMPLES];
+
+  for (int i=0; i<AGL_CALIBRATION_SAMPLES; i++)
+  {
+    AGL_Buffer[i] = bmp280.readAltitude();
+    Serial.print("Calibrating altitude: ");
+    Serial.println(AGL_Buffer[i]);
+    delay(AGL_CALIBRATION_TIME * 1000 / AGL_CALIBRATION_SAMPLES);
+  }
+
+  float sum = 0;
+  for (int i=0; i<AGL_CALIBRATION_SAMPLES; i++)
+  {
+    sum += AGL_Buffer[i];
+  }
+  float AGL = sum / AGL_CALIBRATION_SAMPLES;
+
+  float variance = 0;
+  for (int i=0; i<AGL_CALIBRATION_SAMPLES; i++)
+  {
+    variance += pow((AGL_Buffer[i] - AGL), 2) / AGL_CALIBRATION_SAMPLES;
+  }
+
+  sActState.AGL = AGL;
+  sActState.AGL_Variance = variance;
+
+  if (variance < AGL_VARIANCE_THRESHOLD)
+  {
+    // Soft start on ground, saving AGL do EEPROM and nominal operation.
+
+    // COLOCAR AQUI O CODIGO PRA SALVAR O AGL NA EEPROM!! @DIEGO
+
+  }
+  else
+  {
+    // Hard start mid flight (hard reset), retrieving AGL from EEPROM.
+
+    // COLOCAR AQUI O CODIGO PRA >>RECUPERAR<< O AGL NA EEPROM!! @DIEGO
+
+  }
+  sActState.state_time = millis();
 }
 
-void Avionics::filterStates(StateStruct *sState)
+
+void Avionics::updateState()
 {
-  
+  // Ler os sensores e atualizar 'sActState'.
+  getSensors();
+
+  for (int i=0; i<MEMORY_SIZE; i++)
+  {
+    if (i < MEMORY_SIZE - 1)
+    {
+      sActState.altitudeHistory[i] = sActState.altitudeHistory[i+1];
+    }
+    else
+    {
+      sActState.altitudeHistory[i] = sActState.barometer[3];
+    }
+  }
+}
+
+void Avionics::filterAltitudes()
+{
+  for (int i = 0; i < MEMORY_SIZE - FILTER_SIZE + 1; i++)
+  {
+    float sum = 0;
+    
+    for (int k = 0; k < FILTER_SIZE; k++)
+    {
+      sum += sActState.altitudeHistory[i+k];
+    }
+    sActState.filteredHistory[i] = sum / FILTER_SIZE;
+  }
+}
+
+void Avionics::finiteDifferences()
+{
+  for (int i = 0; i < MEMORY_SIZE - FILTER_SIZE; i++)
+  {
+    sActState.finiteDifferences[i] = sActState.filteredHistory[i+1] - sActState.filteredHistory[i];
+  }
+}
+
+void Avionics::updateFlightState()
+{
+  Serial.println("DEBUG:");
+  Serial.println(abs(sActState.filteredHistory[MEMORY_SIZE-FILTER_SIZE]));
+  //### GROUNDED AVIONICS ###
+  if (sActState.flightState == 0) // ground in launch rod.
+  {
+    
+    if (abs(sActState.filteredHistory[MEMORY_SIZE-FILTER_SIZE]) > THRESHOLD_LIFTOFF)
+    {
+      sActState.flightState = 1;
+    }
+  }
+
+  //### IN FLIGHT ###
+  else if (sActState.flightState == 1) // in flight.
+  {
+    float count = 0;
+    for (int i = 0; i < MEMORY_SIZE - FILTER_SIZE; i++)
+    {
+      if (sActState.finiteDifferences[i] < 0)
+      {
+        count++;
+      }
+    }
+    if (count/(MEMORY_SIZE-FILTER_SIZE) > THRESHOLD_PARACHUTE)
+    {
+      sActState.flightState = 2;
+    }
+  }
+
+  //### APOGEE DETECTED ###
+  else if (sActState.flightState == 2) // drogue deployment.
+  {
+    float count = 0;
+    for (int i = 0; i < MEMORY_SIZE - FILTER_SIZE; i++)
+    {
+      if (sActState.filteredHistory[i] < THRESHOLD_MAIN)
+      {
+        count++;
+      }
+    }
+    if (count/(MEMORY_SIZE-FILTER_SIZE) > THRESHOLD_PARACHUTE)
+    {
+      sActState.flightState = 3;
+    }
+  }
+
+  //### APPROACHING GROUND ###
+  else if (sActState.flightState == 3) // main deployment.
+  {
+    if (sActState.filteredHistory[MEMORY_SIZE - FILTER_SIZE] < THRESHOLD_TOUCHDOWN)
+    {
+      sActState.flightState = 4;
+    }
+  }
+
+  //### TOUCHDOWN ###
+  else if (sActState.flightState == 4)
+  {
+
+  }
+}
+
+void Avionics::activateServos()
+{
+  if (sActState.flightState == 0)
+  {
+  sActState.drogue = 0;
+  sActState.main = 0;
+  digitalWrite(DROGUE_PIN, HIGH);
+  digitalWrite(MAIN_PIN, HIGH);
+  }
+
+  else if (sActState.flightState == 1)
+  {
+  sActState.drogue = 0;
+  sActState.main = 0;
+  digitalWrite(DROGUE_PIN, HIGH);
+  digitalWrite(MAIN_PIN, HIGH);
+  }
+
+  else if (sActState.flightState == 2)
+  {
+      // AQUI FALTA O CODIGO PRA USAR DROGUE_TIME_MS PRA GERAR O PULSO
+
+  sActState.drogue = 1;
+  sActState.main = 0;
+  digitalWrite(DROGUE_PIN, LOW);
+  digitalWrite(MAIN_PIN, HIGH);
+  }
+
+  else if (sActState.flightState == 3)
+  {
+      // AQUI FALTA O CODIGO PRA USAR MAIN_TIME_MS PRA GERAR O PULSO
+
+  sActState.drogue = 1;
+  sActState.main = 1;
+  digitalWrite(DROGUE_PIN, HIGH);
+  digitalWrite(MAIN_PIN, LOW);
+  }
+
+
+  else if (sActState.flightState == 4)
+  {
+  sActState.drogue = 1;
+  sActState.main = 1;
+  digitalWrite(DROGUE_PIN, HIGH);
+  digitalWrite(MAIN_PIN, HIGH);
+  }
 }
