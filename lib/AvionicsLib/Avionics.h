@@ -12,6 +12,8 @@ typedef struct
   float ina[3] = {0}; //Posicoes 1, 2 e 3 respectivamente são a Tensão, Corrente e Potencia.
   // fim do getSensors();
 
+  float radioPacket[PACKET_SIZE] = {0};
+
   float altitudeHistory[MEMORY_SIZE] = {0}; //Memoria das ultimas altitudes.
   float filteredHistory[MEMORY_SIZE - FILTER_SIZE + 1] = {0}; //Altitudes filtradas.
   float finiteDifferences[MEMORY_SIZE - FILTER_SIZE] = {0}; //Velocidade vertical.
@@ -22,12 +24,12 @@ typedef struct
   float AGL_Variance;
 
   float main;
-  unsigned long long main_time;
+  unsigned long long mainTime;
 
   float drogue;
-  unsigned long long drogue_time;
+  unsigned long long drogueTime;
 
-  unsigned long long state_time;
+  unsigned long long stateTime;
 
 } StateStruct; //State Structure
 
@@ -41,6 +43,7 @@ class Avionics
     void serialDebug();
 
     void boardDebug();
+    void error();
 
     void initBMP280();
     void getBMP280(StateStruct *sBarometer);
@@ -49,6 +52,8 @@ class Avionics
     void initINA();
     void getINA(StateStruct *sIna);
     void getSensors();
+    void initLora();
+    void loraSend(StateStruct *sRadioPackage);
 
     void initFlight();
     void updateState();

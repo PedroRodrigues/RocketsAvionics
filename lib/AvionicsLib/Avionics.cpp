@@ -4,8 +4,11 @@
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 #include <TinyGPS.h>
+#include <RH_RF95.h>
 #include "Avionics.h"
 #include "AvionicsConsts.h"
+
+
 
 Avionics::Avionics(){};
 
@@ -14,6 +17,7 @@ StateStruct *spActState = &sActState;
 
 Adafruit_BMP280 bmp280;
 Adafruit_INA219 ina219;
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 void Avionics::init()
 {
@@ -26,9 +30,9 @@ void Avionics::init()
 
 void Avionics::update()
 {
-  if (millis() - sActState.state_time > UPDATE_DELAY_STATE)
+  if (millis() - sActState.stateTime > UPDATE_DELAY_STATE)
   {
-    sActState.state_time = millis();
+    sActState.stateTime = millis();
 
     updateState();
     filterAltitudes();
@@ -36,12 +40,12 @@ void Avionics::update()
     updateFlightState();
     activateServos();
 
-    if (DEBUG_BOARD)
+    if (!DEBUG_BOARD)
     {
       boardDebug();
     }
     
-    if(DEBUG_SERIAL)
+    if(!DEBUG_SERIAL)
     {
       serialDebug();
     }
@@ -107,6 +111,11 @@ void Avionics::boardDebug()
   digitalWrite(LED_Y_PIN, LOW);
   digitalWrite(LED_G_PIN, LOW);
   }
+}
+
+void Avionics::error()
+{
+
 }
 
 void Avionics::initBMP280()
@@ -221,6 +230,36 @@ void Avionics::getSensors()
   getINA(spActState);
 }
 
+void initLora()
+{
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+
+  // manual reset
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
+  if (!rf95.init()) 
+  {
+    Serial.println("LoRa radio init failed");
+  }
+
+  rf95.setTxPower(23, false);
+}
+
+void sendPackage()
+{
+  rf95.send((uint8_t *)sActState.radioPacket, PACKET_SIZE*4);
+
+  rf95.waitPacketSent();
+  // Now wait for a reply
+  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(buf);
+}
+
 void Avionics::initFlight()
 {
   pinMode(BUZZER_PIN, OUTPUT);
@@ -287,7 +326,7 @@ void Avionics::initFlight()
     // COLOCAR AQUI O CODIGO PRA >>RECUPERAR<< O AGL NA EEPROM!! @DIEGO
 
   }
-  sActState.state_time = millis();
+  sActState.stateTime = millis();
 }
 
 
