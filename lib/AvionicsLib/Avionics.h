@@ -53,7 +53,7 @@ class Avionics
     void getINA(StateStruct *sIna);
     void getSensors();
     void initLora();
-    void loraSend(StateStruct *sRadioPackage);
+    void loraSend();
 
     void initFlight();
     void updateState();

@@ -115,7 +115,12 @@ void Avionics::boardDebug()
 
 void Avionics::error()
 {
+  pinMode(LED_R_PIN,OUTPUT);
+  pinMode(LED_Y_PIN,OUTPUT);
+  pinMode(LED_G_PIN,OUTPUT);
 
+  ////FATAL ERROR/////
+  if(initBMP280() == 0 || initIMU()_ == 0 || initLora() == 0)
 }
 
 void Avionics::initBMP280()
@@ -127,8 +132,8 @@ void Avionics::initBMP280()
 
   bmp280.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                      Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
-                     Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
-                     Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                     Adafruit_BMP280::SAMPLING_X2,    /* Pressure oversampling */
+                     Adafruit_BMP280::FILTER_X4,      /* Filtering. */
                      Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 }
 
@@ -250,14 +255,11 @@ void initLora()
   rf95.setTxPower(23, false);
 }
 
-void sendPackage()
+void loraSend()
 {
   rf95.send((uint8_t *)sActState.radioPacket, PACKET_SIZE*4);
 
   rf95.waitPacketSent();
-  // Now wait for a reply
-  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
 }
 
 void Avionics::initFlight()
