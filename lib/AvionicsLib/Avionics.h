@@ -16,6 +16,7 @@ typedef struct
 
   float altitudeHistory[MEMORY_SIZE] = {0}; //Memoria das ultimas altitudes.
   float filteredHistory[MEMORY_SIZE - FILTER_SIZE + 1] = {0}; //Altitudes filtradas.
+  float filteredHistorySlow[MEMORY_SIZE - FILTER_SIZE + 1] = {0};
   float finiteDifferences[MEMORY_SIZE - FILTER_SIZE] = {0}; //Velocidade vertical.
 
   float flightState; // 0 chao, 1 voo, 2 drogue, 3 main, 4 chao;
@@ -28,8 +29,11 @@ typedef struct
 
   float drogue;
   unsigned long long drogueTime;
-
   unsigned long long stateTime;
+  unsigned long long slowTime;
+
+  unsigned int fatalError;
+  unsigned int error;
 
 } StateStruct; //State Structure
 
@@ -41,6 +45,7 @@ class Avionics
     void init();
     void update();
     void serialDebug();
+    void buzzer();
 
     void boardDebug();
     void error();
@@ -58,6 +63,7 @@ class Avionics
     void initFlight();
     void updateState();
     void filterAltitudes();
+    void filterAltitudesSlow();
     void finiteDifferences();
     void updateFlightState();
     void activateServos(); 
